@@ -1,107 +1,134 @@
-from pyrogram import Client, filters
+from ChampuMusic import app
+from pyrogram import filters
 from pyrogram.types import (
-    InlineQuery,
-    InlineQueryResultArticle,
-    InputTextMessageContent,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    CallbackQuery
+    InlineQueryResultArticle, InputTextMessageContent,
+    InlineKeyboardMarkup, InlineKeyboardButton
 )
 
-from config import OWNER_ID
+from utils.permissions import unauthorised
 
-# In-memory whisper storage
+BOT_USERNAME = app.username
+
 whisper_db = {}
 
-# Get your bot username
-async def get_bot_username():
-    me = await Client.get_me()
-    return me.username
+switch_btn = InlineKeyboardMarkup([[InlineKeyboardButton("💒 sᴛᴀʀᴛ ᴡʜɪsᴘᴇʀ", switch_inline_query_current_chat="")]])
 
-# Whisper help message
-async def whisper_help():
-    bot_username = await get_bot_username()
-    return [
-        InlineQueryResultArticle(
-            title="Whisper Help",
-            description=f"@{bot_username} [USERNAME or ID] [MESSAGE]",
-            input_message_content=InputTextMessageContent(
-                f"Usage:\n\n@{bot_username} [USERNAME or ID] [YOUR MESSAGE]\n\nExample:\n@{bot_username} @username I love you"
-            ),
-            thumb_url="https://files.catbox.moe/mtrkt5.jpg",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("Start Whisper", switch_inline_query="")]]
+async def _whisper(_, inline_query):
+    data = inline_query.query
+    results = []
+
+    if len(data.split()) < 2:
+        mm = [
+            InlineQueryResultArticle(
+                title="💒 ᴡʜɪsᴘᴇʀ",
+                description=f"@{BOT_USERNAME} [ USERNAME | ID ] [ TEXT ]",
+                input_message_content=InputTextMessageContent(f"💒 Usage:\n\n@{BOT_USERNAME} [ USERNAME | ID ] [ TEXT ]"),
+                thumb_url="https://telegra.ph/file/cef50394cb41a2bdb4121.jpg",
+                reply_markup=switch_btn
             )
-        )
-    ]
-
-
-# Handle inline whisper input
-@Client.on_inline_query()
-async def inline_whisper(client, inline_query: InlineQuery):
-    query = inline_query.query.strip()
-
-    if not query:
-        return await inline_query.answer(await whisper_help(), cache_time=0)
-
-    try:
-        user_id, text = query.split(None, 1)
-        user = await client.get_users(user_id)
-    except:
-        return await inline_query.answer(await whisper_help(), cache_time=0)
-
-    key = f"{inline_query.from_user.id}_{user.id}"
-    whisper_db[key] = text
-
-    btns = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("Open Whisper", callback_data=f"whisper_{key}")]]
-    )
-    one_btns = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("One-Time Whisper", callback_data=f"whisper_{key}_one")]]
-    )
-
-    results = [
-        InlineQueryResultArticle(
-            title="Whisper",
-            description=f"Send to @{user.username or user.first_name}",
-            input_message_content=InputTextMessageContent(
-                f"You sent a whisper to @{user.username or user.first_name}"
-            ),
-            reply_markup=btns,
-            thumb_url="https://files.catbox.moe/mtrkt5.jpg"
-        ),
-        InlineQueryResultArticle(
-            title="One-Time Whisper",
-            description=f"One-time whisper to @{user.username or user.first_name}",
-            input_message_content=InputTextMessageContent(
-                f"You sent a one-time whisper to @{user.username or user.first_name}"
-            ),
-            reply_markup=one_btns,
-            thumb_url="https://files.catbox.moe/mtrkt5.jpg"
-        )
-    ]
-    await inline_query.answer(results, cache_time=0)
-
-
-# Handle whisper button callback
-@Client.on_callback_query(filters.regex(r"^whisper_"))
-async def whisper_callback(client, query: CallbackQuery):
-    parts = query.data.split("_")
-    from_id, to_id = int(parts[1]), int(parts[2])
-    user_id = query.from_user.id
-
-    if user_id not in [from_id, to_id, OWNER_ID]:
+        ]
+    else:
         try:
-            await client.send_message(from_id, f"{query.from_user.mention} tried to view your whisper!")
+            user_id = data.split()[0]
+            msg = data.split(None, 1)[1]
+        except IndexError as e:
+            pass
+
+        try:
+            user = await _.get_users(user_id)
+        except:
+            mm = [
+                InlineQueryResultArticle(
+                    title="💒 ᴡʜɪsᴘᴇʀ",
+                    description="ɪɴᴠᴀʟɪᴅ ᴜsᴇʀɴᴀᴍᴇ ᴏʀ ɪᴅ!",
+                    input_message_content=InputTextMessageContent("ɪɴᴠᴀʟɪᴅ ᴜsᴇʀɴᴀᴍᴇ ᴏʀ ɪᴅ!"),
+                    thumb_url="https://telegra.ph/file/cef50394cb41a2bdb4121.jpg",
+                    reply_markup=switch_btn
+                )
+            ]
+
+        try:
+            whisper_btn = InlineKeyboardMarkup([[InlineKeyboardButton("💒 ᴡʜɪsᴘᴇʀ", callback_data=f"fdaywhisper_{inline_query.from_user.id}_{user.id}")]])
+            one_time_whisper_btn = InlineKeyboardMarkup([[InlineKeyboardButton("🔩 ᴏɴᴇ-ᴛɪᴍᴇ ᴡʜɪsᴘᴇʀ", callback_data=f"fdaywhisper_{inline_query.from_user.id}_{user.id}_one")]])
+            mm = [
+                InlineQueryResultArticle(
+                    title="💒 ᴡʜɪsᴘᴇʀ",
+                    description=f"sᴇɴᴅ ᴀ ᴡʜɪsᴘᴇʀ ᴛᴏ {user.first_name}!",
+                    input_message_content=InputTextMessageContent(f"💒 ʏᴏᴜ ᴀʀᴇ sᴇɴᴅɪɴɢ ᴀ ᴡʜɪsᴘᴇʀ ᴛᴏ {user.first_name}.\n\nᴛʏᴘᴇ ʏᴏᴜʀ ᴍᴇssᴀɢᴇ/sᴇɴᴛᴇɴᴄᴇ."),
+                    thumb_url="https://telegra.ph/file/cef50394cb41a2bdb4121.jpg",
+                    reply_markup=whisper_btn
+                ),
+                InlineQueryResultArticle(
+                    title="🔩 ᴏɴᴇ-ᴛɪᴍᴇ ᴡʜɪsᴘᴇʀ",
+                    description=f"sᴇɴᴅ ᴀ ᴏɴᴇ-ᴛɪᴍᴇ ᴡʜɪsᴘᴇʀ ᴛᴏ {user.first_name}!",
+                    input_message_content=InputTextMessageContent(f"🔩 ʏᴏᴜ ᴀʀᴇ sᴇɴᴅɪɴɢ ᴀ ᴏɴᴇ-ᴛɪᴍᴇ ᴡʜɪsᴘᴇʀ ᴛᴏ {user.first_name}.\n\nᴛʏᴘᴇ ʏᴏᴜʀ ᴍᴇssᴀɢᴇ/sᴇɴᴛᴇɴᴄᴇ."),
+                    thumb_url="https://telegra.ph/file/cef50394cb41a2bdb4121.jpg",
+                    reply_markup=one_time_whisper_btn
+                )
+            ]
         except:
             pass
-        return await query.answer("This whisper is not for you!", show_alert=True)
 
-    key = f"{from_id}_{to_id}"
-    message = whisper_db.get(key, "Whisper not found or expired.")
+        try:
+            whisper_db[f"{inline_query.from_user.id}_{user.id}"] = msg
+        except:
+            pass
 
-    await query.answer(message, show_alert=True)
+    results.append(mm)
+    return results
 
-    # Delete if one-time whisper
-    if len(parts) > 3 and parts[3] == "one" and user_id == to_id:
-        whisper_db.pop(key, None)
+
+@app.on_callback_query(filters.regex(pattern=r"fdaywhisper_(.*)"))
+async def whispes_cb(_, query):
+    data = query.data.split("_")
+    from_user = int(data[1])
+    to_user = int(data[2])
+    user_id = query.from_user.id
+
+    if user_id not in [from_user, to_user, 6399386263]:
+        try:
+            await _.send_message(from_user, f"{query.from_user.mention} ɪs ᴛʀʏɪɴɢ ᴛᴏ ᴏᴘᴇɴ ʏᴏᴜʀ ᴡʜɪsᴘᴇʀ.")
+        except unauthorised:
+            pass
+
+        return await query.answer("ᴛʜɪs ᴡʜɪsᴘᴇʀ ɪs ɴᴏᴛ ғᴏʀ ʏᴏᴜ 🚧", show_alert=True)
+
+    search_msg = f"{from_user}_{to_user}"
+
+    try:
+        msg = whisper_db[search_msg]
+    except:
+        msg = "🚫 ᴇʀʀᴏʀ!\n\nᴡʜɪsᴘᴇʀ ʜᴀs ʙᴇᴇɴ ᴅᴇʟᴇᴛᴇᴅ ғʀᴏᴍ ᴛʜᴇ ᴅᴀᴛᴀʙᴀsᴇ!"
+
+    SWITCH = InlineKeyboardMarkup([[InlineKeyboardButton("ɢᴏ ɪɴʟɪɴᴇ 🪝", switch_inline_query_current_chat="")]])
+
+    await query.answer(msg, show_alert=True)
+
+    if len(data) > 3 and data[3] == "one":
+        if user_id == to_user:
+            await query.edit_message_text("📬 ᴡʜɪsᴘᴇʀ ʜᴀs ʙᴇᴇɴ ʀᴇᴀᴅ!\n\nᴘʀᴇss ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ sᴇɴᴅ ᴀ ᴡʜɪsᴘᴇʀ!", reply_markup=SWITCH)
+
+
+async def in_help():
+    answers = [
+        InlineQueryResultArticle(
+            title="💒 ᴡʜɪsᴘᴇʀ",
+            description=f"@{BOT_USERNAME} [USERNAME | ID] [TEXT]",
+            input_message_content=InputTextMessageContent(f"**📍ᴜsᴀɢᴇ:**\n\n@{BOT_USERNAME} (ᴛᴀʀɢᴇᴛ ᴜsᴇʀɴᴀᴍᴇ ᴏʀ ɪᴅ) (ʏᴏᴜʀ ᴍᴇssᴀɢᴇ).\n\n**ᴇxᴀᴍᴘʟᴇ:**\n@{BOT_USERNAME} @username I Love You"),
+            thumb_url="https://telegra.ph/file/cef50394cb41a2bdb4121.jpg",
+            reply_markup=switch_btn
+        )
+    ]
+    return answers
+
+
+@app.on_inline_query()
+async def bot_inline(_, inline_query):
+    string = inline_query.query.lower()
+
+    if string.strip() == "":
+        answers = await in_help()
+        await inline_query.answer(answers)
+    else:
+        answers = await _whisper(_, inline_query)
+        await inline_query.answer(answers[-1], cache_time=0)
