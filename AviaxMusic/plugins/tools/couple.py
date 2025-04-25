@@ -9,7 +9,7 @@ from pyrogram.enums import *
 
 #BOT FILE NAME
 from AviaxMusic import app as app
-from AviaxMusic.plugins.tools.couples_db import _get_image, get_couple
+from AviaxMusic.plugins.tools.cpdb import _get_image, get_couple
 
 POLICE = [
     [
