@@ -1,4 +1,4 @@
-from AviaxMusic.utils.mongo import db
+from AviaxMusic.utils.monngon import db
 
 coupledb = db.couple
 
