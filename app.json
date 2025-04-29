@@ -56,6 +56,16 @@
 
       },
 
+      "API_KEY": {
+
+        "description": "Get api key @Rishu1286",
+
+        "value": "",
+
+        "required": true
+
+      },
+
       "MONGO_DB_URI": {
 
         "description": "Get a mongodb url from https://cloud.mongodb.com.",
