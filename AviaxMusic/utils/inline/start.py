@@ -3,6 +3,7 @@ from pyrogram.types import InlineKeyboardButton
 import config
 from AviaxMusic import app
 
+OWNER_SID = 7943643606
 
 def start_panel(_):
     buttons = [
@@ -30,7 +31,7 @@ def private_panel(_):
             InlineKeyboardButton(text=_["S_B_2"], url=config.SUPPORT_GROUP),
         ],
         [
-           InlineKeyboardButton(text=_["S_B_5"], user_id=config.OWNER_ID),
+           InlineKeyboardButton(text=_["S_B_5"], user_id=OWNER_SID),
         ],
     ]
     return buttons
